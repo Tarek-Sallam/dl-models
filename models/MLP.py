@@ -56,7 +56,7 @@ class MLP:
         return layer_output
     
     def backward(self, X):
-        
+        pass
 
 
 class ReLU(Activation):
