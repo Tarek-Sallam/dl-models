@@ -26,10 +26,11 @@ class Tensor:
         self._backward = lambda : None
         self._op = ''
 
-    def __add__(self, other: Union[Tensor, float]) -> Tensor:
+    def __add__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
         try:
             other = self.convertToTensor(other)
-            out = Tensor(self.data + other.data, store_grad=self.store_grad or other.store_grad)
+            result = self.data + other.data
+            out = Tensor(result, store_grad=self.store_grad or other.store_grad)
             out._prev = {self, other}
             out._op = 'add'
 
@@ -44,6 +45,40 @@ class Tensor:
             return out
         except Exception as e:
             raise e
+    
+    def __radd__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            return self.__add__(other)
+        except Exception as e:
+            raise e
+        
+    def __mul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            other = self.convertToTensor(other)
+            result = self.data * other.data
+            out = Tensor(result, store_grad=self.store_grad or other.store_grad)
+            out._prev = {self, other}
+            out._op = 'mul'
+
+            def _backward():
+                if self.store_grad:
+                    self.grad += out.grad * other.data
+                if other.store_grad:
+                    other.grad += out.grad * self.data
+            
+            out._backward = _backward
+            return out
+        except Exception as e:
+            raise e
+    
+    def __rmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            other = self.convertToTensor(other)
+            result = self.data @ 
+            return self.__mul__(other)
+        except Exception as e:
+            raise e
+        
 
     def backward(self):
         self.grad = np.ones_like(self.data)
