@@ -80,6 +80,30 @@ class Tensor:
             raise e
     __rmul__ = __mul__
         
+    def __truediv__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            other = self.convertToTensor(other)
+            result = 1 / other.data
+            out1 = Tensor(result, store_grad=other.store_grad)
+            out1._prev = {other}
+            out1._op = 'div'
+            def _backward():
+                if other.store_grad:
+                    other.grad += - out1.grad*(other.data**2)
+            out1._backward = _backward
+            return self.__mul__(self, out1)
+    
+        except Exception as e:
+            raise e
+    
+    def __rtruediv__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            self.convertToTensor(other)
+            return other.__truediv__(self)
+            
+        except Exception as e:
+            raise e
+
     def __matmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
         try:
             other = self.convertToTensor(other)
@@ -157,6 +181,67 @@ class Tensor:
 
             out._backward = _backward
             return out
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def log2(tensor: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = np.log2(tensor.data)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'log2'
+
+            def _backward():
+                tensor.grad += out.grad * 1/tensor.data * np.log2(np.e)
+
+            out._backward = _backward
+            return out
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def log(tensor: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = np.log(tensor.data)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'log'
+
+            def _backward():
+                tensor.grad += out.grad * 1/tensor.data
+
+            out._backward = _backward
+            return out
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def sum(tensor: Union[ArrayLike, Tensor], axis=0) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = np.sum(tensor.data, axis=axis)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'sum'
+
+            def _backward():
+                tensor.grad += out.grad
+
+            out._backward = _backward
+            return out
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def mean(tensor: Union[ArrayLike, Tensor], axis=0) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            n = tensor.data.shape[axis]
+            return Tensor.sum(tensor) / Tensor(n)
+        
         except Exception as e:
             raise e
         

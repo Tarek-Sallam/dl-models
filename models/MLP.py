@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Union, List
+from typing import List
 import numpy as np
 
-from autodiff.Tensor import Tensor, ArrayLike
+from autodiff.Tensor import Tensor
 
 class MLP:
     def __init__(self, layers: List[Layer]):
@@ -88,9 +88,9 @@ class ReLU(Activation):
     
 class Tanh(Activation):
     def __call__(self, x):
-        return np.tanh(x)
+        return Tensor.tanh(x)
 
 class Sigmoid(Activation):
     def __call__(self, x):
-        return 1 / (1 + np.e**-x)
+        return Tensor.sigmoid(x)
     
