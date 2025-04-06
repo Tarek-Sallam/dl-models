@@ -1,7 +1,6 @@
 from __future__ import annotations
 import numpy as np
 from typing import Union, List
-from Graph import Graph
 
 ArrayLike = Union[float, int, List[float], List[int], np.ndarray]
 
@@ -19,7 +18,7 @@ class Tensor:
         else:
             return data
     
-    def __init__(self, data: ArrayLike, store_grad=False):
+    def __init__(self, data: ArrayLike, store_grad:bool =False):
         self.data = np.array(data, dtype=np.float32)
         self.grad = np.zeros_like(self.data) if store_grad else None
         self.store_grad = store_grad
@@ -47,11 +46,7 @@ class Tensor:
         except Exception as e:
             raise e
     
-    def __radd__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
-        try:
-            return self.__add__(other)
-        except Exception as e:
-            raise e
+    __radd__ = __add__
         
     def __mul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
         try:
@@ -71,14 +66,7 @@ class Tensor:
             return out
         except Exception as e:
             raise e
-    
-    def __rmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
-        try:
-            other = self.convertToTensor(other)
-            result = self.data @ 
-            return self.__mul__(other)
-        except Exception as e:
-            raise e
+    __rmul__ = __mul__
         
     def __matmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
         try:
@@ -90,9 +78,9 @@ class Tensor:
 
             def _backward():
                 if self.store_grad:
-                    self.grad += out.grad * other.data
+                    self.grad += out.grad * other.data.T
                 if other.store_grad:
-                    other.grad += out.grad * self.data
+                    other.grad += out.grad * self.data.T
             
             out._backward = _backward
             return out
@@ -108,18 +96,27 @@ class Tensor:
         except Exception as e:
             raise e
         
-    def backward(self):
-        self.grad = np.ones_like(self.data)
-        topo = []
-        visited = set()
+    def backward(self, weight: ArrayLike = None):
+        try:
+            if weight is not None:
+                if weight.shape != self.data.shape:
+                    raise ValueError("Shape of weight does not match shape of tensor")
+                self.grad = np.array(weight)
+            else:
+                self.grad = np.ones_like(self.data)
+                    
+            topo = []
+            visited = set()
 
-        def build_topo(tensor):
-            if tensor not in visited:
-                visited.add(tensor)
-                for prev in tensor._prev:
-                    build_topo(prev)
-                topo.append(tensor)
-        
-        build_topo(self)
-        for tensor in reversed(topo):
-            tensor._backward()
+            def build_topo(tensor):
+                if tensor not in visited:
+                    visited.add(tensor)
+                    for prev in tensor._prev:
+                        build_topo(prev)
+                    topo.append(tensor)
+            
+            build_topo(self)
+            for tensor in reversed(topo):
+                tensor._backward()
+        except Exception as e:
+            raise e
