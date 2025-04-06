@@ -26,6 +26,18 @@ class Tensor:
         self._backward = lambda : None
         self._op = ''
 
+    def copy(self, shallow=False) -> Tensor:
+        try:
+            if shallow:
+                data = self.data
+            else:
+                data = self.data.copy()
+
+            out = Tensor(data, store_grad=self.store_grad)
+            return out
+        except Exception as e:
+            raise e
+        
     def __add__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
         try:
             other = self.convertToTensor(other)
@@ -93,6 +105,58 @@ class Tensor:
             self.convertToTensor(other)
             return other.__matmul__(self)
             
+        except Exception as e:
+            raise e
+
+    @staticmethod
+    def reLU(tensor: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = np.clip(tensor.data, a_min=0)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'reLU'
+            
+            def _backward():
+                tensor.grad += out.grad * (out.data > 0).astype(np.float32)
+
+            out._backward = _backward
+            return out
+        
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def tanh(tensor: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = np.tanh(tensor.data)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'tanh'
+
+            def _backward():
+                tensor.grad += out.grad * (1 - out.data**2)
+
+            out._backward = _backward
+            return out
+        except Exception as e:
+            raise e
+        
+    @staticmethod
+    def sigmoid(tensor: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            tensor = Tensor.convertToTensor(tensor)
+            result = 1 / (1 + np.e**-tensor.data)
+            out = Tensor(result, store_grad=tensor.store_grad)
+            out._prev={tensor}
+            out._op = 'sigmoid'
+
+            def _backward():
+                tensor.grad += out.grad * (out.data)*(1 - out.data)
+
+            out._backward = _backward
+            return out
         except Exception as e:
             raise e
         
