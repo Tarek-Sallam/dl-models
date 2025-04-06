@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 from typing import Union, List
+from Graph import Graph
 
 ArrayLike = Union[float, int, List[float], List[int], np.ndarray]
 
