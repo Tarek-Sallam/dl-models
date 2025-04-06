@@ -79,7 +79,34 @@ class Tensor:
         except Exception as e:
             raise e
         
+    def __matmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            other = self.convertToTensor(other)
+            result = self.data @ other.data
+            out = Tensor(result, store_grad=self.store_grad or other.store_grad)
+            out._prev = {self, other}
+            out._op = 'matmul'
 
+            def _backward():
+                if self.store_grad:
+                    self.grad += out.grad * other.data
+                if other.store_grad:
+                    other.grad += out.grad * self.data
+            
+            out._backward = _backward
+            return out
+        
+        except Exception as e:
+            raise e
+        
+    def __rmatmul__(self, other: Union[ArrayLike, Tensor]) -> Tensor:
+        try:
+            self.convertToTensor(other)
+            return other.__matmul__(self)
+            
+        except Exception as e:
+            raise e
+        
     def backward(self):
         self.grad = np.ones_like(self.data)
         topo = []
