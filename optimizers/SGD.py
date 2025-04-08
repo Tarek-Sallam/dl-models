@@ -5,3 +5,7 @@ class SGDOptimizer:
 
     def step(self, gradients):
         params -= self.learning_rate * gradients
+
+    def __call__(self, gradients):
+        self.step(gradients)
+

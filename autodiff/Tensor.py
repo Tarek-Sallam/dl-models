@@ -19,7 +19,10 @@ class Tensor:
             return data
     
     def __init__(self, data: ArrayLike, store_grad:bool =False):
-        self.data = np.array(data, dtype=np.float32)
+        if isinstance(data, Tensor):
+            self.data = data.data.copy()
+        else:
+            self.data = np.array(data, dtype=np.float32)
         self.grad = np.zeros_like(self.data) if store_grad else None
         self.store_grad = store_grad
         self._prev = set()

@@ -40,7 +40,10 @@ class MLP:
         try:
             layer_output = Tensor.copy(X)
             for layer in self.layers:
+                print(layer_output.data.shape)
                 layer_output = layer(layer_output)
+                print(f"In layer {i}")
+                i+=1
             return layer_output
         except Exception as e:
             raise e
@@ -78,7 +81,7 @@ class Linear(ParamLayer):
     
     def forward(self, X: Tensor):
         try:
-            return (self.weights @ X) + self.bias
+            return (X @ self.weights) + self.bias
         except Exception as e:
             raise e
 
