@@ -46,8 +46,7 @@ class MLP:
                 i+=1
             return layer_output
         except Exception as e:
-            raise e
-    
+            raise e    
 
 class Layer:
     pass

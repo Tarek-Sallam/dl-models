@@ -5,7 +5,6 @@ from typing import Union, List
 ArrayLike = Union[float, int, List[float], List[int], np.ndarray]
 
 class Tensor:
-
     @staticmethod
     def convertToTensor(data):
         if not isinstance(data, Tensor):
@@ -28,7 +27,7 @@ class Tensor:
         self._prev = set()
         self._backward = lambda : None
         self._op = ''
-
+    
     def copy(self, shallow=False) -> Tensor:
         try:
             if shallow:
@@ -248,6 +247,7 @@ class Tensor:
         except Exception as e:
             raise e
         
+    
     def backward(self, weight: ArrayLike = None):
         try:
             if weight is not None:
@@ -259,7 +259,7 @@ class Tensor:
                     
             topo = []
             visited = set()
-
+    
             def build_topo(tensor):
                 if tensor not in visited:
                     visited.add(tensor)
@@ -270,5 +270,6 @@ class Tensor:
             build_topo(self)
             for tensor in reversed(topo):
                 tensor._backward()
+            
         except Exception as e:
             raise e
